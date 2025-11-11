@@ -6,11 +6,12 @@ import { ChatHistory } from './components/ChatHistory';
 import { ChatInput } from './components/ChatInput';
 import { FeedbackModal } from './components/feedback/FeedbackModal';
 import { KnowledgeBaseModal } from './components/kb/KnowledgeBaseModal';
+import { AdminModal } from './components/admin/AdminModal';
 import { runChat } from './services/geminiService';
 import { retrieveFromKnowledgeBase } from './rag/retriever';
 import { knowledgeBase as defaultKnowledgeBase } from './rag/knowledgeBase';
 import type { Message, Document } from './types';
-import { SYSTEM_PROMPT } from './constants';
+import { DEFAULT_SYSTEM_PROMPT } from './constants';
 
 interface MessagePair {
   userPrompt: Message;
@@ -18,13 +19,13 @@ interface MessagePair {
 }
 
 const App: React.FC = () => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: `gemini-${Date.now()}`,
-      role: 'model',
-      content: "Hello! I'm ChatArbor, your AI career assistant. How can I help you with your job search today?",
-    },
-  ]);
+  const GREETING_MESSAGE: Message = {
+    id: `gemini-${Date.now()}`,
+    role: 'model',
+    content: "Hello! I'm ChatArbor, your AI career assistant. How can I help you with your job search today?",
+  };
+
+  const [messages, setMessages] = useState<Message[]>([GREETING_MESSAGE]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -35,6 +36,10 @@ const App: React.FC = () => {
   // Knowledge Base State
   const [knowledgeBaseDocs, setKnowledgeBaseDocs] = useState<Document[]>([]);
   const [isKbModalOpen, setIsKbModalOpen] = useState(false);
+
+  // Admin Panel State
+  const [systemPrompt, setSystemPrompt] = useState<string>(DEFAULT_SYSTEM_PROMPT);
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
 
   const chatRef = useRef<Chat | null>(null);
 
@@ -64,15 +69,39 @@ const App: React.FC = () => {
     }
   }, [knowledgeBaseDocs]);
 
+  // Load System Prompt from localStorage on initial render
+  useEffect(() => {
+    try {
+      const savedPrompt = localStorage.getItem('systemPrompt');
+      if (savedPrompt && savedPrompt.trim() !== '') {
+        setSystemPrompt(savedPrompt);
+      } else {
+        setSystemPrompt(DEFAULT_SYSTEM_PROMPT);
+      }
+    } catch (err) {
+      console.error("Failed to load system prompt from localStorage", err);
+      setSystemPrompt(DEFAULT_SYSTEM_PROMPT);
+    }
+  }, []);
+
+  // Save System Prompt to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem('systemPrompt', systemPrompt);
+    } catch (err) {
+      console.error("Failed to save system prompt to localStorage", err);
+    }
+  }, [systemPrompt]);
+
 
   const initializeChat = useCallback(() => {
     try {
-      chatRef.current = runChat(SYSTEM_PROMPT);
+      chatRef.current = runChat(systemPrompt);
     } catch (e) {
       console.error(e);
       setError('Failed to initialize the chat service. Please check your API key.');
     }
-  }, []);
+  }, [systemPrompt]);
 
   useEffect(() => {
     initializeChat();
@@ -166,6 +195,15 @@ User Query: "${userInput}"
 
     handleCloseFeedbackModal();
   };
+  
+  // --- Admin Modal Handlers ---
+  const handleSaveSystemPrompt = (newPrompt: string) => {
+    setSystemPrompt(newPrompt);
+    // The initializeChat effect will re-run automatically.
+    // Reset the chat history to start a new conversation with the new prompt.
+    setMessages([GREETING_MESSAGE]);
+    setError(null);
+  };
 
   // --- Knowledge Base Handlers ---
   const handleAddDocument = (doc: Omit<Document, 'id'>) => {
@@ -186,7 +224,10 @@ User Query: "${userInput}"
 
   return (
     <div className="flex flex-col h-screen bg-gray-100 dark:bg-gray-900">
-      <Header onOpenKbModal={() => setIsKbModalOpen(true)} />
+      <Header 
+        onOpenKbModal={() => setIsKbModalOpen(true)}
+        onOpenAdminModal={() => setIsAdminModalOpen(true)}
+      />
       <ChatHistory messages={messages} isLoading={isLoading} onOpenFeedback={handleOpenFeedbackModal} />
       {error && <p className="text-center text-red-500 text-sm px-4">{error}</p>}
       <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
@@ -207,6 +248,13 @@ User Query: "${userInput}"
         onAdd={handleAddDocument}
         onUpdate={handleUpdateDocument}
         onDelete={handleDeleteDocument}
+      />
+
+      <AdminModal
+        isOpen={isAdminModalOpen}
+        onClose={() => setIsAdminModalOpen(false)}
+        currentPrompt={systemPrompt}
+        onSave={handleSaveSystemPrompt}
       />
     </div>
   );

@@ -1,11 +1,13 @@
 
 import React from 'react';
+import { CogIcon } from './icons/CogIcon';
 
 interface HeaderProps {
   onOpenKbModal: () => void;
+  onOpenAdminModal: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onOpenKbModal }) => {
+export const Header: React.FC<HeaderProps> = ({ onOpenKbModal, onOpenAdminModal }) => {
   return (
     <header className="bg-white dark:bg-gray-800 shadow-md p-4">
       <div className="container mx-auto flex justify-between items-center">
@@ -15,12 +17,21 @@ export const Header: React.FC<HeaderProps> = ({ onOpenKbModal }) => {
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-300">Your AI Career Assistant</p>
         </div>
-        <button 
-          onClick={onOpenKbModal}
-          className="px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md shadow-sm hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600"
-        >
-          Manage Knowledge Base
-        </button>
+        <div className="flex items-center space-x-2">
+            <button 
+              onClick={onOpenKbModal}
+              className="px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md shadow-sm hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600"
+            >
+              Manage Knowledge Base
+            </button>
+            <button 
+              onClick={onOpenAdminModal}
+              className="p-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md shadow-sm hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600"
+              aria-label="Open Admin Panel"
+            >
+              <CogIcon className="w-5 h-5" />
+            </button>
+        </div>
       </div>
     </header>
   );
