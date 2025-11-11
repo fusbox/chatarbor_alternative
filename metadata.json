@@ -1,0 +1,7 @@
+{
+  "name": "Job Seeker Virtual Assistant",
+  "description": "An AI-powered chatbot designed to assist job seekers with their career inquiries, offering advice on resumes, interviews, and job search strategies, powered by the Gemini API.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
