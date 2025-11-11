@@ -113,7 +113,7 @@ const App: React.FC = () => {
     setError(null);
     setIsLoading(true);
     const newUserMessage: Message = { id: `user-${Date.now()}`, role: 'user', content: userInput };
-    setMessages(prevMessages => [...prevMessages, newUserMessage]);
+    setMessages((prevMessages: Message[]) => [...prevMessages, newUserMessage]);
 
     if (!chatRef.current) {
        initializeChat();
@@ -141,14 +141,38 @@ User Query: "${userInput}"
 `;
       }
 
-      const result = await chat.sendMessage({ message: finalInput });
-      const botResponse: Message = { id: `gemini-${Date.now()}`, role: 'model', content: result.text };
-      setMessages(prevMessages => [...prevMessages, botResponse]);
+      const stream = await chat.sendMessageStream({ message: finalInput });
+
+      let botMessageId = '';
+      let fullResponse = '';
+
+      for await (const chunk of stream) {
+        // The chunk type is GenerateContentResponse.
+        const chunkText = chunk.text;
+        fullResponse += chunkText;
+
+        if (!botMessageId) {
+          // First chunk, create the new message
+          botMessageId = `gemini-${Date.now()}`;
+          setMessages((prev: Message[]) => [
+            ...prev,
+            { id: botMessageId, role: 'model', content: fullResponse },
+          ]);
+        } else {
+          // Subsequent chunks, update the last message
+          setMessages((prev: Message[]) =>
+            prev.map((msg: Message) =>
+              msg.id === botMessageId ? { ...msg, content: fullResponse } : msg
+            )
+          );
+        }
+      }
+
     } catch (e) {
       console.error(e);
       const errorMessage = 'Sorry, I encountered an error. Please try again.';
       setError(errorMessage);
-      setMessages(prevMessages => [...prevMessages, { id: `error-${Date.now()}`, role: 'model', content: errorMessage, isError: true }]);
+      setMessages((prevMessages: Message[]) => [...prevMessages, { id: `error-${Date.now()}`, role: 'model', content: errorMessage, isError: true }]);
     } finally {
       setIsLoading(false);
     }
@@ -156,7 +180,7 @@ User Query: "${userInput}"
 
   // --- Feedback Modal Handlers ---
   const handleOpenFeedbackModal = (botResponse: Message) => {
-    const botResponseIndex = messages.findIndex(msg => msg.id === botResponse.id);
+    const botResponseIndex = messages.findIndex((msg: Message) => msg.id === botResponse.id);
     if (botResponseIndex > 0) {
       let userPrompt: Message | null = null;
       for (let i = botResponseIndex - 1; i >= 0; i--) {
@@ -208,17 +232,17 @@ User Query: "${userInput}"
   // --- Knowledge Base Handlers ---
   const handleAddDocument = (doc: Omit<Document, 'id'>) => {
     const newDoc = { ...doc, id: `doc-${Date.now()}` };
-    setKnowledgeBaseDocs(prevDocs => [...prevDocs, newDoc]);
+    setKnowledgeBaseDocs((prevDocs: Document[]) => [...prevDocs, newDoc]);
   };
 
   const handleUpdateDocument = (updatedDoc: Document) => {
-    setKnowledgeBaseDocs(prevDocs =>
-      prevDocs.map(doc => (doc.id === updatedDoc.id ? updatedDoc : doc))
+    setKnowledgeBaseDocs((prevDocs: Document[]) =>
+      prevDocs.map((doc: Document) => (doc.id === updatedDoc.id ? updatedDoc : doc))
     );
   };
 
   const handleDeleteDocument = (docId: string) => {
-    setKnowledgeBaseDocs(prevDocs => prevDocs.filter(doc => doc.id !== docId));
+    setKnowledgeBaseDocs((prevDocs: Document[]) => prevDocs.filter((doc: Document) => doc.id !== docId));
   };
 
 
