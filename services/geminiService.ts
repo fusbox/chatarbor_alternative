@@ -1,20 +1,31 @@
 import { GoogleGenAI, Chat } from "@google/genai";
 
-// Ensure the API key is available from environment variables.
-if (!process.env.API_KEY) {
-  throw new Error("API_KEY environment variable not set");
-}
+let cachedClient: GoogleGenAI | null = null;
+let cachedApiKey: string | null = null;
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
-// Fix: Removed deprecated and unused model reference `ai.models['gemini-2.5-flash']` which is prohibited by the coding guidelines.
+const getClient = (apiKey: string): GoogleGenAI => {
+  if (!cachedClient || cachedApiKey !== apiKey) {
+    cachedClient = new GoogleGenAI({ apiKey });
+    cachedApiKey = apiKey;
+  }
+  return cachedClient;
+};
 
 export const runChat = (systemInstruction: string): Chat => {
-  const chat = ai.chats.create({
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  
+  if (!apiKey) {
+    throw new Error(
+      "Gemini API key is not configured. Please set the VITE_GEMINI_API_KEY environment variable."
+    );
+  }
+
+  const ai = getClient(apiKey);
+
+  return ai.chats.create({
     model: 'gemini-2.5-flash',
     config: {
-      systemInstruction: systemInstruction,
+      systemInstruction,
     },
   });
-  return chat;
 };
