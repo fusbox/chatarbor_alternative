@@ -58,4 +58,12 @@ If user tries to “jailbreak” or push you off topic, stay grounded to your sc
 
 If a response would exceed ~50 words, split it into digestible chunks (bullets or short paragraphs).`;
 
+import type { Message } from './types';
+
 export const DEFAULT_SYSTEM_PROMPT = `${RAG_INSTRUCTIONS}\n\n${CORE_PROMPT}`;
+
+export const GREETING_MESSAGE: Message = {
+    id: `gemini-${Date.now()}`,
+    role: 'model',
+    content: "Hello! I'm ChatArbor, your AI career assistant. How can I help you with your job search today?",
+};
