@@ -4,12 +4,14 @@
 	"main": "worker/index.ts",
 	"compatibility_date": "2025-04-24",
 	"compatibility_flags": ["nodejs_compat"],
+	"vectorize": [
+		{
+			"binding": "VECTORIZE_INDEX",
+			"index_name": "knowledge-base-index"
+		}
+	],
 	"durable_objects": {
 		"bindings": [
-			{
-				"name": "CHAT_AGENT",
-				"class_name": "ChatAgent"
-			},
 			{
 				"name": "APP_CONTROLLER",
 				"class_name": "AppController"
@@ -17,10 +19,6 @@
 		]
 	},
 	"migrations": [
-		{
-			"tag": "v1",
-			"new_sqlite_classes": ["ChatAgent"]
-		},
 		{
 			"tag": "v2",
 			"new_classes": ["AppController"]

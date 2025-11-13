@@ -16,8 +16,8 @@ const App: React.FC = () => {
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
 
   const { systemPrompt, handleSaveSystemPrompt } = useSystemPrompt();
-  const { knowledgeBaseDocs, handleAddDocument, handleUpdateDocument, handleDeleteDocument } = useKnowledgeBase();
-  const { messages, isLoading, error, handleSendMessage, resetChat } = useChat(systemPrompt, knowledgeBaseDocs);
+  const { knowledgeBaseDocs, handleAddDocument, handleUpdateDocument, handleDeleteDocument, handleFileUpload } = useKnowledgeBase();
+  const { messages, isLoading, error, handleSendMessage, resetChat } = useChat();
   const { isFeedbackModalOpen, selectedMessageForFeedback, handleOpenFeedbackModal, handleCloseFeedbackModal, handleSubmitFeedback } = useFeedback(messages);
 
   const onSaveSystemPrompt = (newPrompt: string) => {
@@ -51,6 +51,7 @@ const App: React.FC = () => {
         onAdd={handleAddDocument}
         onUpdate={handleUpdateDocument}
         onDelete={handleDeleteDocument}
+        onFileUpload={handleFileUpload}
       />
 
       <AdminModal

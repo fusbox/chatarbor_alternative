@@ -11,6 +11,8 @@ export interface Env {
     OPENROUTER_API_KEY: string;
     CHAT_AGENT: DurableObjectNamespace<ChatAgent>;
     APP_CONTROLLER: DurableObjectNamespace<AppController>;
+    VECTORIZE_INDEX: VectorizeIndex;
+    AI: any;
 }
 
 /**

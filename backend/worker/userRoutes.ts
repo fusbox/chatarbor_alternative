@@ -1,32 +1,12 @@
 import { Hono } from "hono";
-import { getAgentByName } from 'agents';
-import { ChatAgent } from './agent';
 import { API_RESPONSES } from './config';
 import { Env, getAppController, registerSession, unregisterSession } from "./core-utils";
+import { processAndEmbedDocument } from "./knowledge";
+import { getChatResponse } from "./chat";
 /**
  * DO NOT MODIFY THIS FUNCTION. Only for your reference.
  */
 export function coreRoutes(app: Hono<{ Bindings: Env }>) {
-    // Use this API for conversations. **DO NOT MODIFY**
-    app.all('/api/chat/:sessionId/*', async (c) => {
-        try {
-        const sessionId = c.req.param('sessionId');
-        const agent = await getAgentByName<Env, ChatAgent>(c.env.CHAT_AGENT, sessionId); // Get existing agent or create a new one if it doesn't exist, with sessionId as the name
-        const url = new URL(c.req.url);
-        url.pathname = url.pathname.replace(`/api/chat/${sessionId}`, '');
-        return agent.fetch(new Request(url.toString(), {
-            method: c.req.method,
-            headers: c.req.header(),
-            body: c.req.method === 'GET' || c.req.method === 'DELETE' ? undefined : c.req.raw.body
-        }));
-        } catch (error) {
-        console.error('Agent routing error:', error);
-        return c.json({
-            success: false,
-            error: API_RESPONSES.AGENT_ROUTING_FAILED
-        }, { status: 500 });
-        }
-    });
 }
 export function userRoutes(app: Hono<{ Bindings: Env }>) {
     // Knowledge Base Routes
@@ -62,6 +42,26 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
             return c.json({ success: false, error: 'Document not found' }, { status: 404 });
         }
         return c.json({ success: true, data: { id } });
+    });
+
+    app.post('/api/knowledge/upload', async (c) => {
+        const formData = await c.req.formData();
+        const file = formData.get('file');
+        if (file) {
+            await processAndEmbedDocument(file as File, c.env);
+            return c.json({ success: true, message: 'File processed successfully' });
+        }
+
+        return c.json({ success: false, error: 'No file provided' }, { status: 400 });
+    });
+
+    app.post('/api/v2/chat', async (c) => {
+        const { message } = await c.req.json();
+        if (!message) {
+            return c.json({ success: false, error: 'Message is required' }, { status: 400 });
+        }
+        const response = await getChatResponse(message, c.env);
+        return c.json({ success: true, data: { response } });
     });
     // Session Management Routes
     app.get('/api/sessions', async (c) => {

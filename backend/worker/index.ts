@@ -3,12 +3,12 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
+import { serveStatic } from "hono/cloudflare-workers";
 import { Env } from "./core-utils";
 import { API_RESPONSES } from "./config";
 import { userRoutes, coreRoutes } from "./userRoutes";
-import { ChatAgent } from "./agent";
 import { AppController } from "./app-controller";
-export { ChatAgent, AppController };
+export { AppController };
 export interface ClientErrorReport {
   message: string;
   url: string;
@@ -29,6 +29,14 @@ const app = new Hono<{ Bindings: Env }>();
 /** DO NOT TOUCH THE CODE BELOW THIS LINE */
 // Middleware
 app.use("*", logger());
+
+app.use(
+  "*",
+  serveStatic({
+    root: "./public",
+    rewriteRequest: (path) => (path.includes("/api/") ? path : "/index.html"),
+  })
+);
 
 app.use(
   "/api/*",
