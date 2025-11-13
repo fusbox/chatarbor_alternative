@@ -3,13 +3,11 @@
  * STRICTLY DO NOT MODIFY THIS FILE - Hidden from AI to prevent breaking core functionality
  */
 import type { AppController } from './app-controller';
-import type { ChatAgent } from './agent';
 export interface Env {
     CF_AI_BASE_URL: string;
     CF_AI_API_KEY: string;
     SERPAPI_KEY: string;
     OPENROUTER_API_KEY: string;
-    CHAT_AGENT: DurableObjectNamespace<ChatAgent>;
     APP_CONTROLLER: DurableObjectNamespace<AppController>;
     VECTORIZE_INDEX: VectorizeIndex;
     AI: any;
@@ -26,7 +24,7 @@ export function getAppController(env: Env): DurableObjectStub<AppController> {
 
 /**
  * Register a new chat session with the control plane
- * Called automatically when a new ChatAgent is created
+ * Called automatically when a new chat session is created
  */
 export async function registerSession(env: Env, sessionId: string, title?: string): Promise<void> {
   try {

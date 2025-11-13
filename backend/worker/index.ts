@@ -30,13 +30,30 @@ const app = new Hono<{ Bindings: Env }>();
 // Middleware
 app.use("*", logger());
 
-app.use(
-  "*",
-  serveStatic({
-    root: "./public",
-    rewriteRequest: (path) => (path.includes("/api/") ? path : "/index.html"),
-  })
-);
+const hasStaticManifest =
+  typeof (globalThis as { __STATIC_CONTENT_MANIFEST?: string | undefined })
+    .__STATIC_CONTENT_MANIFEST !== "undefined";
+
+if (hasStaticManifest) {
+  app.use(
+    "*",
+    serveStatic({
+      root: "./public",
+      rewriteRequest: (path) => (path.includes("/api/") ? path : "/index.html"),
+    })
+  );
+} else {
+  // When running via the local Vite dev server there is no Cloudflare asset manifest.
+  app.use("*", async (c, next) => {
+    if (c.req.path.startsWith("/api/")) {
+      return next();
+    }
+    return c.text(
+      "Static assets are served by the frontend dev server during local development.",
+      404
+    );
+  });
+}
 
 app.use(
   "/api/*",
