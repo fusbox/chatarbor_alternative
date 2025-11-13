@@ -4,7 +4,8 @@
   "description": "An AI-powered chatbot for job seekers.",
   "private": true,
   "scripts": {
-    "dev": "vite"
+    "dev": "vite",
+    "build": "vite build"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",

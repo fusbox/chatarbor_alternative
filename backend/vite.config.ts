@@ -48,48 +48,11 @@ const customLogger = {
   hasWarned: false,
 };
 
-function watchDependenciesPlugin() {
-  return {
-    // Plugin to clear caches when dependencies change
-    name: "watch-dependencies",
-    configureServer(server: any) {
-      const filesToWatch = [
-        path.resolve("package.json"),
-        path.resolve("bun.lock"),
-      ];
-
-      server.watcher.add(filesToWatch);
-
-      server.watcher.on("change", (filePath: string) => {
-        if (filesToWatch.includes(filePath)) {
-          console.log(
-            `\n📦 Dependency file changed: ${path.basename(
-              filePath
-            )}. Clearing caches...`
-          );
-
-          // Run the cache-clearing command
-          exec(
-            "rm -f .eslintcache tsconfig.tsbuildinfo",
-            (err, stdout, stderr) => {
-              if (err) {
-                console.error("Failed to clear caches:", stderr);
-                return;
-              }
-              console.log("✅ Caches cleared successfully.\n");
-            }
-          );
-        }
-      });
-    },
-  };
-}
-
 // https://vite.dev/config/
 export default ({ mode }: { mode: string }) => {
   const env = loadEnv(mode, process.cwd());
   return defineConfig({
-    plugins: [react(), cloudflare(), watchDependenciesPlugin()],
+    plugins: [react(), cloudflare()],
     build: {
       minify: true,
       sourcemap: "inline", // Use inline source maps for better error reporting
@@ -116,7 +79,7 @@ export default ({ mode }: { mode: string }) => {
     optimizeDeps: {
       // This is still crucial for reducing the time from when `bun run dev`
       // is executed to when the server is actually ready.
-      include: ["react", "react-dom", "react-router-dom"],
+      include: ["react", "react-dom", "react-router-dom", "mustache", "@cloudflare/ai"],
       exclude: ["agents"], // Exclude agents package from pre-bundling due to Node.js dependencies
       force: true,
     },
